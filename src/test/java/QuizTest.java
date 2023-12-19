@@ -102,7 +102,7 @@ public class QuizTest {
         ByteArrayInputStream testPlayQuiz = new ByteArrayInputStream(playQuiz.getBytes());
         Scanner sc_playQuiz = new Scanner(testPlayQuiz);
         Quiz test_quiz = QuizConsole.quizzes.get(1);
-        double score = test_quiz.playQuiz(sc_playQuiz);
+        double score = test_quiz.playQuiz(sc_playQuiz, 0); // TODO
         assertEquals(50.0, score);
     }
 

@@ -1,6 +1,9 @@
 package com.example;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.stream.Collectors;
 import java.util.Scanner;
 
 public class Instructor {
@@ -61,6 +64,26 @@ public class Instructor {
             }
         } else {
             System.out.println("Instructor does not have this quiz.");
+        }
+    }
+
+    public void getQuizzesByDifficulty(int difficulty) {
+        if (difficulty != 1 && difficulty != 2 && difficulty != 3) {
+            System.out.println("Please enter valid difficulty.\n");
+        }
+        QuizDifficulty quizDifficulty = difficulty == 1 ? QuizDifficulty.EASY
+                : difficulty == 2 ? QuizDifficulty.MEDIUM : QuizDifficulty.HARD;
+        List<Quiz> filteredQuizzes = quizzes.values().stream()
+                .filter(quiz -> quiz.difficulty == quizDifficulty)
+                .collect(Collectors.toCollection(ArrayList::new));
+        if (filteredQuizzes.size() != 0) {
+            System.out.println("Following are the quizzes of difficulty " + quizDifficulty);
+            for (Quiz quiz : filteredQuizzes) {
+                System.out.println("-- Quiz ID: " + quiz.quizID);
+            }
+            System.out.println();
+        } else {
+            System.out.println("No quizzes of difficulty " + quizDifficulty + " found!\n");
         }
     }
 

@@ -11,6 +11,7 @@ public class QuizConsole {
     public static HashMap<Integer, Quiz> quizzes = new HashMap<>();
     public static HashMap<Integer, Player> players = new HashMap<>();
     public static HashMap<Integer, Instructor> instructors = new HashMap<>();
+    public static HashMap<Integer, LeaderBoard> leaderBoard = new HashMap<>();
 
     public static void startQuizConsole(Scanner sc) {
         FileOperations.createFile(INSTRUCTOR_CSV_PATH);
@@ -23,6 +24,8 @@ public class QuizConsole {
             System.out.println("[4] Create new instructor.");
             System.out.println("[5] View player score.");
             System.out.println("[6] Manage quiz.");
+            System.out.println("[7] View quiz leaderboard.");
+            System.out.println("[8] View quizzes by difficulty.");
             System.out.print("Enter your choice (enter 0 to exit): ");
             int choice = sc.nextInt();
             sc.nextLine();
@@ -76,6 +79,22 @@ public class QuizConsole {
                     }
                     break;
 
+                case 7:
+                    try {
+                        viewLeaderBoard(sc);
+                        break;
+                    } catch (Exception exception) {
+                        System.out.println("Error in viewing leaderboard: " + exception.getMessage());
+                    }
+
+                case 8:
+                    try {
+                        viewQuizzesByDifficulty(sc);
+                        break;
+                    } catch (Exception exception) {
+                        System.out.println("Error in viewing by difficulty: " + exception.getMessage());
+                    }
+
                 default:
                     break;
             }
@@ -91,7 +110,12 @@ public class QuizConsole {
             System.out.print("Enter quiz ID: ");
             int quiz_id_new = sc.nextInt();
             if (!quizzes.containsKey(quiz_id_new)) {
-                Quiz new_quiz = new Quiz(quiz_id_new, sc);
+                System.out.print("Enter quiz difficulty (1-easy, 2-medium, 3-hard): ");
+                int difficulty = sc.nextInt();
+                sc.nextLine();
+                QuizDifficulty quizDifficulty = difficulty == 2 ? QuizDifficulty.MEDIUM
+                        : difficulty == 3 ? QuizDifficulty.HARD : QuizDifficulty.EASY;
+                Quiz new_quiz = new Quiz(quiz_id_new, quizDifficulty, sc);
                 quizzes.put(quiz_id_new, new_quiz);
                 instructors.get(inst_id).addQuiz(quiz_id_new, new_quiz);
             } else {
@@ -113,7 +137,7 @@ public class QuizConsole {
             sc.nextLine();
             if (quizzes.containsKey(play_quiz_id)) {
                 Quiz player_quiz = quizzes.get(play_quiz_id);
-                double score = player_quiz.playQuiz(sc);
+                double score = player_quiz.playQuiz(sc, player_id);
                 players.get(player_id).updateScore(play_quiz_id, score);
                 System.out.println("\nQuiz Completed successfully. Your score is " + score + "%\n");
             } else {
@@ -195,6 +219,33 @@ public class QuizConsole {
             } else {
                 throw new QuizNotFoundException("Quiz not found!\n");
             }
+        } else {
+            throw new InstructorNotFoundException("Instructor not found!\n");
+        }
+    }
+
+    // method to view leaderboard of any quiz
+    public static void viewLeaderBoard(Scanner sc) throws QuizNotFoundException {
+        System.out.print("Enter quiz ID: ");
+        int quiz_id = sc.nextInt();
+        sc.nextLine();
+        if (quizzes.containsKey(quiz_id)) {
+            quizzes.get(quiz_id).leaderBoard.displayLeaderboard();
+        } else {
+            throw new QuizNotFoundException("Quiz not found!\n");
+        }
+    }
+
+    // method to view quizzes by difficulty
+    public static void viewQuizzesByDifficulty(Scanner sc) throws InstructorNotFoundException {
+        System.out.print("Enter instructor ID: ");
+        int inst_id = sc.nextInt();
+        sc.nextLine();
+        if (instructors.containsKey(inst_id)) {
+            System.out.print("Enter quiz difficulty (1-easy, 2-medium, 3-hard): ");
+            int difficulty = sc.nextInt();
+            sc.nextLine();
+            instructors.get(inst_id).getQuizzesByDifficulty(difficulty);
         } else {
             throw new InstructorNotFoundException("Instructor not found!\n");
         }
