@@ -28,27 +28,51 @@ public class Quiz {
         sc.nextLine();
 
         for (int ques_num = 1; ques_num <= num_of_questions; ques_num++) {
+            String op_1 = "";
+            String op_2 = "";
+            String op_3 = "";
+            int correct_option = 0;
+            String correct_ans = "";
+            QuestionType questionType;
             System.out.print("\nEnter question " + ques_num + ": ");
             String question = sc.nextLine();
 
-            System.out.print("\tEnter option 1: ");
-            String op_1 = sc.nextLine();
-
-            System.out.print("\tEnter option 2: ");
-            String op_2 = sc.nextLine();
-
-            System.out.print("\tEnter option 3: ");
-            String op_3 = sc.nextLine();
-
-            System.out.print("Enter correct answer option (enter 1/2/3): ");
-            int correct_option = sc.nextInt();
+            System.out.print("Enter type of the question (1-mcq, 2-open ended): ");
+            int type = sc.nextInt();
             sc.nextLine();
+
+            if (type == 1) {
+                questionType = QuestionType.MCQ;
+
+                System.out.print("\tEnter option 1: ");
+                op_1 = sc.nextLine();
+
+                System.out.print("\tEnter option 2: ");
+                op_2 = sc.nextLine();
+
+                System.out.print("\tEnter option 3: ");
+                op_3 = sc.nextLine();
+
+                System.out.print("Enter correct answer option (enter 1/2/3): ");
+                correct_option = sc.nextInt();
+                sc.nextLine();
+            } else {
+                questionType = QuestionType.OPEN_ENDED;
+
+                System.out.print("Enter correct answer: ");
+                correct_ans = sc.nextLine();
+            }
 
             System.out.print("Enter timer duration for this question (in seconds): ");
             int timerDuration = sc.nextInt();
             sc.nextLine();
 
-            Question q = new Question(question, op_1, op_2, op_3, correct_option, timerDuration);
+            Question q;
+            if (questionType.equals(QuestionType.MCQ)) {
+                q = new Question(question, op_1, op_2, op_3, correct_option, timerDuration);
+            } else {
+                q = new Question(question, correct_ans, timerDuration);
+            }
             this.questions.add(q);
             System.out.println("Question added successfully!\n");
         }
@@ -57,18 +81,27 @@ public class Quiz {
 
     public double playQuiz(Scanner sc, int playerID) {
         Collections.shuffle(questions);
-        int[] choices = new int[this.questions.size()];
+        ArrayList<Integer> choices = new ArrayList<>();
+        ArrayList<String> answers = new ArrayList<>();
         for (int i = 0; i < this.questions.size(); i++) {
             System.out.println(questions.get(i));
-            System.out.print("Enter your answer (1/2/3): ");
-            choices[i] = sc.nextInt();
-            sc.nextLine();
+            if (questions.get(i).questionType.equals(QuestionType.MCQ)) {
+                System.out.print("Enter your answer (1/2/3): ");
+                int choice = sc.nextInt();
+                sc.nextLine();
+                choices.add(choice);
+            } else {
+                System.out.print("Enter your answer (enter text): ");
+                String answer = sc.nextLine();
+                answers.add(answer);
+            }
             System.out.println();
         }
-        return scoreQuiz(choices, playerID);
+        return scoreQuiz(choices, answers, playerID);
     }
 
-    // public double playQuiz(Scanner sc) {
+    // public double playQuiz(Scanner sc, int playerID) {
+    // Collections.shuffle(questions);
     // int[] choices = new int[this.questions.size()];
 
     // for (int i = 0; i < this.questions.size(); i++) {
@@ -118,21 +151,35 @@ public class Quiz {
     // timerThread.interrupt();
     // choices[i] = selectedChoice[0];
     // }
-    // return scoreQuiz(choices);
+    // return scoreQuiz(choices, playerID);
     // }
 
-    public double scoreQuiz(int[] choices, int playerID) {
+    public double scoreQuiz(ArrayList<Integer> choices, ArrayList<String> answers, int playerID) {
         System.out.println("\nQuiz Feedback: ");
         double correct = 0;
-        double questions = (double) choices.length;
-        for (int i = 0; i < choices.length; i++) {
+        double questions = (double) this.questions.size();
+        int mcqidx = 0;
+        int openidx = 0;
+        for (int i = 0; i < this.questions.size(); i++) {
             System.out.print("Question " + (i + 1) + ") ");
-            if (choices[i] != 0 && this.questions.get(i).checkAnswer(choices[i])) {
-                correct += 1.0;
-                System.out.print("Your answer is correct!\n");
+            if (this.questions.get(i).questionType.equals(QuestionType.MCQ)) {
+                if (choices.get(mcqidx) != 0 && this.questions.get(i).checkAnswer(choices.get(mcqidx))) {
+                    correct += 1.0;
+                    System.out.print("Your answer is correct!\n");
+                } else {
+                    System.out.print("Your answer is incorrect. Expected answer: "
+                            + this.questions.get(i).getAnswerMCQ() + "\n");
+                }
+                mcqidx++;
             } else {
-                System.out.print(
-                        "Your answer is incorrect. Expected answer: " + this.questions.get(i).getAnswer() + "\n");
+                if (!answers.get(openidx).isEmpty() && this.questions.get(i).checkAnswer(answers.get(openidx))) {
+                    correct += 1.0;
+                    System.out.print("Your answer is correct!\n");
+                } else {
+                    System.out.print("Your answer is incorrect. Expected answer: "
+                            + this.questions.get(i).getAnswerOpen() + "\n");
+                }
+                openidx++;
             }
         }
         double score = (correct / questions) * 100;
@@ -147,27 +194,51 @@ public class Quiz {
     }
 
     public void addNewQuestion(Scanner sc) {
+        String op_1 = "";
+        String op_2 = "";
+        String op_3 = "";
+        int correct_option = 0;
+        String correct_ans = "";
+        QuestionType questionType;
         System.out.print("\n\tEnter question: ");
         String question = sc.nextLine();
 
-        System.out.print("\t\tEnter option 1: ");
-        String op_1 = sc.nextLine();
-
-        System.out.print("\t\tEnter option 2: ");
-        String op_2 = sc.nextLine();
-
-        System.out.print("\t\tEnter option 3: ");
-        String op_3 = sc.nextLine();
-
-        System.out.print("Enter correct answer option (enter 1/2/3): ");
-        int correct_option = sc.nextInt();
+        System.out.print("\tEnter type of the question (1-mcq, 2-open ended): ");
+        int type = sc.nextInt();
         sc.nextLine();
 
-        System.out.print("Enter timer duration for this question (in seconds): ");
+        if (type == 1) {
+            questionType = QuestionType.MCQ;
+
+            System.out.print("\t\tEnter option 1: ");
+            op_1 = sc.nextLine();
+
+            System.out.print("\t\tEnter option 2: ");
+            op_2 = sc.nextLine();
+
+            System.out.print("\t\tEnter option 3: ");
+            op_3 = sc.nextLine();
+
+            System.out.print("\tEnter correct answer option (enter 1/2/3): ");
+            correct_option = sc.nextInt();
+            sc.nextLine();
+        } else {
+            questionType = QuestionType.OPEN_ENDED;
+
+            System.out.print("\tEnter correct answer: ");
+            correct_ans = sc.nextLine();
+        }
+
+        System.out.print("\tEnter timer duration for this question (in seconds): ");
         int timerDuration = sc.nextInt();
         sc.nextLine();
 
-        Question q = new Question(question, op_1, op_2, op_3, correct_option, timerDuration);
+        Question q;
+        if (questionType.equals(QuestionType.MCQ)) {
+            q = new Question(question, op_1, op_2, op_3, correct_option, timerDuration);
+        } else {
+            q = new Question(question, correct_ans, timerDuration);
+        }
         this.questions.add(q);
         System.out.println("\tQuestion added successfully!\n");
     }
@@ -178,27 +249,51 @@ public class Quiz {
     }
 
     public void addNewQuestionAtIndex(int index, Scanner sc) {
+        String op_1 = "";
+        String op_2 = "";
+        String op_3 = "";
+        int correct_option = 0;
+        String correct_ans = "";
+        QuestionType questionType;
         System.out.print("\n\tEnter question: ");
         String question = sc.nextLine();
 
-        System.out.print("\t\tEnter option 1: ");
-        String op_1 = sc.nextLine();
-
-        System.out.print("\t\tEnter option 2: ");
-        String op_2 = sc.nextLine();
-
-        System.out.print("\t\tEnter option 3: ");
-        String op_3 = sc.nextLine();
-
-        System.out.print("Enter correct answer option (enter 1/2/3): ");
-        int correct_option = sc.nextInt();
+        System.out.print("\tEnter type of the question (1-mcq, 2-open ended): ");
+        int type = sc.nextInt();
         sc.nextLine();
 
-        System.out.print("Enter timer duration for this question (in seconds): ");
+        if (type == 1) {
+            questionType = QuestionType.MCQ;
+
+            System.out.print("\t\tEnter option 1: ");
+            op_1 = sc.nextLine();
+
+            System.out.print("\t\tEnter option 2: ");
+            op_2 = sc.nextLine();
+
+            System.out.print("\t\tEnter option 3: ");
+            op_3 = sc.nextLine();
+
+            System.out.print("\tEnter correct answer option (enter 1/2/3): ");
+            correct_option = sc.nextInt();
+            sc.nextLine();
+        } else {
+            questionType = QuestionType.OPEN_ENDED;
+
+            System.out.print("\t\tEnter correct answer: ");
+            correct_ans = sc.nextLine();
+        }
+
+        System.out.print("\tEnter timer duration for this question (in seconds): ");
         int timerDuration = sc.nextInt();
         sc.nextLine();
 
-        Question q = new Question(question, op_1, op_2, op_3, correct_option, timerDuration);
+        Question q;
+        if (questionType.equals(QuestionType.MCQ)) {
+            q = new Question(question, op_1, op_2, op_3, correct_option, timerDuration);
+        } else {
+            q = new Question(question, correct_ans, timerDuration);
+        }
         this.questions.add(index, q);
         System.out.println("\tQuestion added successfully!\n");
     }
@@ -215,9 +310,19 @@ public class Quiz {
         String quiz = "";
         int ques_num = 1;
         for (Question question : this.questions) {
-            quiz += "\n" + ques_num + ")\n" + question.toString();
+            quiz += "\n\n" + ques_num + ")\n" + question.toString();
             ques_num++;
         }
         return quiz;
+    }
+
+    // These methods are only used in testing
+    // these can be removed after testing is completed
+    public QuizDifficulty geDifficulty() {
+        return this.difficulty;
+    }
+
+    public ArrayList<Question> getQuestions() {
+        return this.questions;
     }
 }
